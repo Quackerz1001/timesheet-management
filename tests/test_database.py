@@ -11,24 +11,23 @@ import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-import pytest
-import bcrypt
+import pytest  # noqa: E402
+import bcrypt  # noqa: E402
 
-from databasehandler import DatabaseHandler
-from validation import (
+from databasehandler import DatabaseHandler  # noqa: E402
+from validation import (  # noqa: E402
     validate_username,
     validate_project_name,
     validate_hours,
     validate_date,
     validate_notes,
     validate_timesheet_form,
-    validate_user_form,
 )
-from auth import validate_password_strength
-import datetime
-
+from auth import validate_password_strength  # noqa: E402
+import datetime  # noqa: E402
 
 # Fixtures
+
 
 @pytest.fixture
 def db(tmp_path):
@@ -42,6 +41,7 @@ def db(tmp_path):
 
 
 # DatabaseHandler — User tests
+
 
 class TestUserCRUD:
 
@@ -136,6 +136,7 @@ class TestUserCRUD:
 
 # DatabaseHandler — Authentication tests
 
+
 class TestAuthentication:
 
     def test_verify_password_correct(self, db):
@@ -208,6 +209,7 @@ class TestAuthentication:
 
 # DatabaseHandler — Timesheet tests
 
+
 class TestTimesheetCRUD:
 
     @pytest.fixture(autouse=True)
@@ -218,13 +220,17 @@ class TestTimesheetCRUD:
 
     def test_create_timesheet_returns_id(self):
         """create_timesheet should return a positive integer ID."""
-        ts_id = self.db.create_timesheet(self.user_id, "Test Project", 7.5, "2025-01-10", "notes")
+        ts_id = self.db.create_timesheet(
+            self.user_id, "Test Project", 7.5, "2025-01-10", "notes"
+        )
         assert isinstance(ts_id, int)
         assert ts_id > 0
 
     def test_read_timesheet(self):
         """read_timesheet should return the correct entry."""
-        ts_id = self.db.create_timesheet(self.user_id, "Alpha Project", 5.0, "2025-02-01", "")
+        ts_id = self.db.create_timesheet(
+            self.user_id, "Alpha Project", 5.0, "2025-02-01", ""
+        )
         ts = self.db.read_timesheet(ts_id)
         assert ts is not None
         assert ts["project_name"] == "Alpha Project"
@@ -241,7 +247,7 @@ class TestTimesheetCRUD:
         """read_all_timesheets should return entries from all users."""
         other_id = self.db.create_user("other", "Other@1234!", is_admin=False)
         self.db.create_timesheet(self.user_id, "Project A", 3.0, "2025-04-01", "")
-        self.db.create_timesheet(other_id,     "Project B", 4.5, "2025-04-01", "")
+        self.db.create_timesheet(other_id, "Project B", 4.5, "2025-04-01", "")
         rows = self.db.read_all_timesheets()
         project_names = [r["project_name"] for r in rows]
         assert "Project A" in project_names
@@ -249,21 +255,29 @@ class TestTimesheetCRUD:
 
     def test_update_timesheet(self):
         """update_timesheet should change the stored values."""
-        ts_id = self.db.create_timesheet(self.user_id, "Old Project", 4.0, "2025-05-01", "")
-        self.db.update_timesheet(ts_id, "New Project", 6.5, "2025-05-02", "updated notes")
+        ts_id = self.db.create_timesheet(
+            self.user_id, "Old Project", 4.0, "2025-05-01", ""
+        )
+        self.db.update_timesheet(
+            ts_id, "New Project", 6.5, "2025-05-02", "updated notes"
+        )
         ts = self.db.read_timesheet(ts_id)
         assert ts["project_name"] == "New Project"
         assert ts["hours_spent"] == 6.5
 
     def test_soft_delete_timesheet(self):
         """Deleted timesheets should not be returned by read_timesheet."""
-        ts_id = self.db.create_timesheet(self.user_id, "Delete Me", 2.0, "2025-06-01", "")
+        ts_id = self.db.create_timesheet(
+            self.user_id, "Delete Me", 2.0, "2025-06-01", ""
+        )
         self.db.delete_timesheet(ts_id)
         assert self.db.read_timesheet(ts_id) is None
 
     def test_deleted_timesheet_excluded_from_user_list(self):
         """Soft-deleted entries should not appear in read_timesheets_for_user."""
-        ts_id = self.db.create_timesheet(self.user_id, "Ghost Entry", 1.5, "2025-07-01", "")
+        ts_id = self.db.create_timesheet(
+            self.user_id, "Ghost Entry", 1.5, "2025-07-01", ""
+        )
         self.db.delete_timesheet(ts_id)
         rows = self.db.read_timesheets_for_user(self.user_id)
         ids = [r["id"] for r in rows]
@@ -271,6 +285,7 @@ class TestTimesheetCRUD:
 
 
 # Validation tests
+
 
 class TestValidation:
 
@@ -353,10 +368,10 @@ class TestValidation:
 
     def test_invalid_timesheet_form_multiple_errors(self):
         ok, errors = validate_timesheet_form(
-            "",   # empty project
-            99.0, # invalid hours
+            "",  # empty project
+            99.0,  # invalid hours
             datetime.date.today() + datetime.timedelta(days=5),  # future date
-            "x" * 600  # notes too long
+            "x" * 600,  # notes too long
         )
         assert ok is False
         assert len(errors) >= 3

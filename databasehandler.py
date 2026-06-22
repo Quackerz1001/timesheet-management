@@ -1,14 +1,14 @@
 import os
 import sqlite3
 from datetime import datetime, timedelta, timezone
-from sqlite3 import Error
 
-import bcrypt 
+import bcrypt
 
 
 def _get_db_path() -> str:
     try:
         import streamlit as st
+
         db_dir = st.secrets.get("SQLITE_DB_PATH", "./db")
         db_file = st.secrets.get("SQLITE_DB", "timesheetmanager.db")
     except Exception:
@@ -29,9 +29,8 @@ class DatabaseHandler:
     def _create_connection(self) -> sqlite3.Connection:
         conn = sqlite3.connect(self.db_file)
         conn.execute("PRAGMA foreign_keys = ON")
-        conn.row_factory = sqlite3.Row 
+        conn.row_factory = sqlite3.Row
         return conn
-
 
     # Initialisation
     def _initialize_db(self) -> None:
@@ -90,41 +89,103 @@ class DatabaseHandler:
         # Sample user entries - passwords stored in .env file
         admin_password = os.getenv("ADMIN_PASSWORD")
         alice_password = os.getenv("ALICE_PASSWORD")
-        bob_password   = os.getenv("BOB_PASSWORD")
+        bob_password = os.getenv("BOB_PASSWORD")
 
-        admin_id = self.create_user("admin",       admin_password, is_admin=True)
+        self.create_user("admin", admin_password, is_admin=True)
         alice_id = self.create_user("alice.jones", alice_password, is_admin=False)
-        bob_id   = self.create_user("bob.smith",   bob_password,   is_admin=False)
+        bob_id = self.create_user("bob.smith", bob_password, is_admin=False)
 
         # Sample timesheet entries
         sample_timesheets = [
-            (alice_id, "Cloud Migration - Phase 1",     7.5, "2025-01-06", "Initial infrastructure assessment"),
-            (alice_id, "Cloud Migration - Phase 1",     6.0, "2025-01-07", "Azure resource group setup"),
-            (alice_id, "ERP Integration",               8.0, "2025-01-08", "API mapping workshop with client"),
-            (bob_id,   "Cyber Security Audit",          5.5, "2025-01-06", "Penetration testing - network layer"),
-            (bob_id,   "Cyber Security Audit",          7.0, "2025-01-07", "Vulnerability report draft"),
-            (bob_id,   "DevOps Transformation",         8.0, "2025-01-08", "CI/CD pipeline design"),
-            (alice_id, "DevOps Transformation",         4.5, "2025-01-09", "Docker containerisation workshop"),
-            (bob_id,   "Data Analytics Platform",       6.5, "2025-01-09", "Power BI dashboard build"),
-            (alice_id, "Data Analytics Platform",       7.0, "2025-01-10", "ETL pipeline implementation"),
-            (bob_id,   "Cloud Migration - Phase 2",     8.0, "2025-01-10", "Cutover planning session"),
+            (
+                alice_id,
+                "Cloud Migration - Phase 1",
+                7.5,
+                "2025-01-06",
+                "Initial infrastructure assessment",
+            ),
+            (
+                alice_id,
+                "Cloud Migration - Phase 1",
+                6.0,
+                "2025-01-07",
+                "Azure resource group setup",
+            ),
+            (
+                alice_id,
+                "ERP Integration",
+                8.0,
+                "2025-01-08",
+                "API mapping workshop with client",
+            ),
+            (
+                bob_id,
+                "Cyber Security Audit",
+                5.5,
+                "2025-01-06",
+                "Penetration testing - network layer",
+            ),
+            (
+                bob_id,
+                "Cyber Security Audit",
+                7.0,
+                "2025-01-07",
+                "Vulnerability report draft",
+            ),
+            (
+                bob_id,
+                "DevOps Transformation",
+                8.0,
+                "2025-01-08",
+                "CI/CD pipeline design",
+            ),
+            (
+                alice_id,
+                "DevOps Transformation",
+                4.5,
+                "2025-01-09",
+                "Docker containerisation workshop",
+            ),
+            (
+                bob_id,
+                "Data Analytics Platform",
+                6.5,
+                "2025-01-09",
+                "Power BI dashboard build",
+            ),
+            (
+                alice_id,
+                "Data Analytics Platform",
+                7.0,
+                "2025-01-10",
+                "ETL pipeline implementation",
+            ),
+            (
+                bob_id,
+                "Cloud Migration - Phase 2",
+                8.0,
+                "2025-01-10",
+                "Cutover planning session",
+            ),
         ]
 
-        for (uid, project, hours, date, notes) in sample_timesheets:
+        for uid, project, hours, date, notes in sample_timesheets:
             self.create_timesheet(uid, project, hours, date, notes)
 
     # User CRUD
 
     def create_user(self, username: str, password: str, is_admin: bool = False) -> int:
         # Hash the password with bcrypt using a work factor of 12
-        password_hash = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt(rounds=12))
+        password_hash = bcrypt.hashpw(
+            password.encode("utf-8"), bcrypt.gensalt(rounds=12)
+        )
 
         with self._create_connection() as conn:
             cursor = conn.cursor()
             # Parameterised query prevents SQL injection (OWASP A03)
             cursor.execute(
                 "INSERT INTO users (username, password_hash, is_admin) VALUES (?, ?, ?)",
-                (username, password_hash.decode("utf-8"), int(is_admin))
+                (username, password_hash.decode("utf-8"), int(is_admin)),
             )
             conn.commit()
             return cursor.lastrowid
@@ -134,8 +195,7 @@ class DatabaseHandler:
         with self._create_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(
-                "SELECT * FROM users WHERE id = ? AND is_deleted = 0",
-                (user_id,)
+                "SELECT * FROM users WHERE id = ? AND is_deleted = 0", (user_id,)
             )
             return cursor.fetchone()
 
@@ -144,8 +204,7 @@ class DatabaseHandler:
         with self._create_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(
-                "SELECT * FROM users WHERE username = ? AND is_deleted = 0",
-                (username,)
+                "SELECT * FROM users WHERE username = ? AND is_deleted = 0", (username,)
             )
             return cursor.fetchone()
 
@@ -154,11 +213,15 @@ class DatabaseHandler:
         with self._create_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(
-                "SELECT id, username, is_admin, created_at FROM users WHERE is_deleted = 0 ORDER BY username"
+                "SELECT id, username, is_admin, created_at"
+                "FROM users WHERE is_deleted = 0"
+                "ORDER BY username"
             )
             return cursor.fetchall()
 
-    def update_user(self, user_id: int, username: str, new_password: str | None = None) -> None:
+    def update_user(
+        self, user_id: int, username: str, new_password: str | None = None
+    ) -> None:
         with self._create_connection() as conn:
             cursor = conn.cursor()
             if new_password:
@@ -166,23 +229,21 @@ class DatabaseHandler:
                     new_password.encode("utf-8"), bcrypt.gensalt(rounds=12)
                 ).decode("utf-8")
                 cursor.execute(
-                    "UPDATE users SET username = ?, password_hash = ? WHERE id = ? AND is_deleted = 0",
-                    (username, password_hash, user_id)
+                    "UPDATE users SET username = ?, password_hash = ?"
+                    "WHERE id = ? AND is_deleted = 0",
+                    (username, password_hash, user_id),
                 )
             else:
                 cursor.execute(
                     "UPDATE users SET username = ? WHERE id = ? AND is_deleted = 0",
-                    (username, user_id)
+                    (username, user_id),
                 )
             conn.commit()
 
     def delete_user(self, user_id: int) -> None:
         with self._create_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(
-                "UPDATE users SET is_deleted = 1 WHERE id = ?",
-                (user_id,)
-            )
+            cursor.execute("UPDATE users SET is_deleted = 1 WHERE id = ?", (user_id,))
             conn.commit()
 
     def _read_user_count(self) -> int:
@@ -192,9 +253,11 @@ class DatabaseHandler:
             cursor.execute("SELECT COUNT(*) FROM users")
             return cursor.fetchone()[0]
 
-    # Authentication & Rate Limiting 
+    # Authentication & Rate Limiting
 
-    def verify_password(self, username: str, plaintext_password: str) -> sqlite3.Row | None:
+    def verify_password(
+        self, username: str, plaintext_password: str
+    ) -> sqlite3.Row | None:
         """
         Verify a login attempt against the stored bcrypt hash.
 
@@ -211,6 +274,7 @@ class DatabaseHandler:
 
         try:
             import streamlit as st
+
             max_attempts = int(st.secrets.get("MAX_LOGIN_ATTEMPTS", max_attempts))
             lockout_mins = int(st.secrets.get("LOCKOUT_MINUTES", lockout_mins))
         except Exception:
@@ -224,12 +288,11 @@ class DatabaseHandler:
         if user["locked_until"]:
             locked_until = datetime.fromisoformat(user["locked_until"])
             if datetime.now(timezone.utc) < locked_until.replace(tzinfo=timezone.utc):
-                return None 
+                return None
 
         # Verify password using bcrypt constant-time comparison
         password_matches = bcrypt.checkpw(
-            plaintext_password.encode("utf-8"),
-            user["password_hash"].encode("utf-8")
+            plaintext_password.encode("utf-8"), user["password_hash"].encode("utf-8")
         )
 
         with self._create_connection() as conn:
@@ -238,7 +301,7 @@ class DatabaseHandler:
                 # Reset failure counter on success
                 cursor.execute(
                     "UPDATE users SET failed_attempts = 0, locked_until = NULL WHERE id = ?",
-                    (user["id"],)
+                    (user["id"],),
                 )
                 conn.commit()
                 return user
@@ -251,7 +314,7 @@ class DatabaseHandler:
                     ).isoformat()
                 cursor.execute(
                     "UPDATE users SET failed_attempts = ?, locked_until = ? WHERE id = ?",
-                    (new_attempts, locked_until, user["id"])
+                    (new_attempts, locked_until, user["id"]),
                 )
                 conn.commit()
                 return None
@@ -264,7 +327,9 @@ class DatabaseHandler:
         is_locked = False
         if user["locked_until"]:
             locked_until_dt = datetime.fromisoformat(user["locked_until"])
-            is_locked = datetime.now(timezone.utc) < locked_until_dt.replace(tzinfo=timezone.utc)
+            is_locked = datetime.now(timezone.utc) < locked_until_dt.replace(
+                tzinfo=timezone.utc
+            )
 
         return {
             "is_locked": is_locked,
@@ -278,7 +343,7 @@ class DatabaseHandler:
             cursor = conn.cursor()
             cursor.execute(
                 "UPDATE users SET failed_attempts = 0, locked_until = NULL WHERE id = ?",
-                (user_id,)
+                (user_id,),
             )
             conn.commit()
 
@@ -289,7 +354,7 @@ class DatabaseHandler:
         project_name: str,
         hours_spent: float,
         date: str,
-        notes: str = ""
+        notes: str = "",
     ) -> int:
         with self._create_connection() as conn:
             cursor = conn.cursor()
@@ -298,7 +363,7 @@ class DatabaseHandler:
                 INSERT INTO timesheets (user_id, project_name, hours_spent, date, notes)
                 VALUES (?, ?, ?, ?, ?)
                 """,
-                (user_id, project_name, hours_spent, date, notes)
+                (user_id, project_name, hours_spent, date, notes),
             )
             conn.commit()
             return cursor.lastrowid
@@ -309,7 +374,7 @@ class DatabaseHandler:
             cursor = conn.cursor()
             cursor.execute(
                 "SELECT * FROM timesheets WHERE id = ? AND is_deleted = 0",
-                (timesheet_id,)
+                (timesheet_id,),
             )
             return cursor.fetchone()
 
@@ -325,7 +390,7 @@ class DatabaseHandler:
                 WHERE  t.user_id = ? AND t.is_deleted = 0
                 ORDER  BY t.date DESC, t.id DESC
                 """,
-                (user_id,)
+                (user_id,),
             )
             return cursor.fetchall()
 
@@ -333,15 +398,13 @@ class DatabaseHandler:
         """Return all active timesheet entries across all users (admin view)."""
         with self._create_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(
-                """
+            cursor.execute("""
                 SELECT t.*, u.username
                 FROM   timesheets t
                 JOIN   users u ON u.id = t.user_id
                 WHERE  t.is_deleted = 0
                 ORDER  BY t.date DESC, t.id DESC
-                """
-            )
+                """)
             return cursor.fetchall()
 
     def update_timesheet(
@@ -350,7 +413,7 @@ class DatabaseHandler:
         project_name: str,
         hours_spent: float,
         date: str,
-        notes: str = ""
+        notes: str = "",
     ) -> None:
         """Update an existing timesheet entry."""
         with self._create_connection() as conn:
@@ -365,7 +428,7 @@ class DatabaseHandler:
                        updated_at   = datetime('now')
                 WHERE  id = ? AND is_deleted = 0
                 """,
-                (project_name, hours_spent, date, notes, timesheet_id)
+                (project_name, hours_spent, date, notes, timesheet_id),
             )
             conn.commit()
 
@@ -374,7 +437,6 @@ class DatabaseHandler:
         with self._create_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(
-                "UPDATE timesheets SET is_deleted = 1 WHERE id = ?",
-                (timesheet_id,)
+                "UPDATE timesheets SET is_deleted = 1 WHERE id = ?", (timesheet_id,)
             )
             conn.commit()

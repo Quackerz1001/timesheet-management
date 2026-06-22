@@ -32,11 +32,15 @@ def validate_password_strength(password: str) -> tuple[bool, str]:
     if not re.search(r"\d", password):
         return False, "Password must contain at least one digit."
     if not re.search(r"[!@#$%^&*_\-]", password):
-        return False, "Password must contain at least one special character (!@#$%^&*_-)."
+        return (
+            False,
+            "Password must contain at least one special character (!@#$%^&*_-).",
+        )
     return True, ""
 
 
 # Session helpers
+
 
 def init_session() -> None:
     """Initialise session state keys if they do not already exist."""
@@ -77,11 +81,11 @@ def login(username: str, password: str) -> tuple[bool, str]:
             f"{remaining} attempt(s) remaining before lockout."
         )
 
-    # Populate session 
+    # Populate session
     st.session_state.logged_in = True
-    st.session_state.user_id   = user["id"]
-    st.session_state.username  = user["username"]
-    st.session_state.is_admin  = bool(user["is_admin"])
+    st.session_state.user_id = user["id"]
+    st.session_state.username = user["username"]
+    st.session_state.is_admin = bool(user["is_admin"])
     return True, ""
 
 

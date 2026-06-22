@@ -1,6 +1,5 @@
 import re
-from datetime import date, datetime
-
+from datetime import date
 
 # Username
 
@@ -93,11 +92,9 @@ def validate_notes(notes: str) -> tuple[bool, str]:
 
 # validators
 
+
 def validate_timesheet_form(
-    project_name: str,
-    hours: float,
-    entry_date: date,
-    notes: str
+    project_name: str, hours: float, entry_date: date, notes: str
 ) -> tuple[bool, list[str]]:
     errors = []
     checks = [
@@ -113,7 +110,7 @@ def validate_timesheet_form(
 
 
 def validate_user_form(username: str, password: str | None) -> tuple[bool, list[str]]:
-    from auth import validate_password_strength 
+    from auth import validate_password_strength
 
     errors = []
     ok, msg = validate_username(username)

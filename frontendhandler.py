@@ -33,6 +33,7 @@ _db = DatabaseHandler()
 
 # Helpers
 
+
 def _require_auth() -> bool:
     """
     Guard function for protected pages.
@@ -66,11 +67,11 @@ def _display_timesheets_table(rows) -> None:
     data = []
     for row in rows:
         entry = {
-            "ID":           row["id"],
-            "Date":         row["date"],
-            "Project":      row["project_name"],
-            "Hours":        row["hours_spent"],
-            "Notes":        row["notes"] or "",
+            "ID": row["id"],
+            "Date": row["date"],
+            "Project": row["project_name"],
+            "Hours": row["hours_spent"],
+            "Notes": row["notes"] or "",
         }
         # Admin view includes the username column
         if "username" in row.keys():
@@ -81,6 +82,7 @@ def _display_timesheets_table(rows) -> None:
 
 
 # Login page
+
 
 def login_page() -> None:
     """
@@ -111,6 +113,7 @@ def login_page() -> None:
 
 # Timesheet management page
 
+
 def show_main_app() -> None:
     """
     Timesheet management page.
@@ -121,7 +124,7 @@ def show_main_app() -> None:
     if not _require_auth():
         return
 
-    user_id  = auth.get_current_user_id()
+    user_id = auth.get_current_user_id()
     username = auth.get_current_username()
     is_admin = auth.require_admin()
 
@@ -152,24 +155,35 @@ def show_main_app() -> None:
     st.header("Log Time")
 
     with st.form("create_timesheet_form", clear_on_submit=True):
-        project_name = st.text_input("Project Name", max_chars=100,
-                                     placeholder="e.g. Cloud Migration - Phase 1")
+        project_name = st.text_input(
+            "Project Name", max_chars=100, placeholder="e.g. Cloud Migration - Phase 1"
+        )
         col1, col2 = st.columns(2)
         with col1:
             hours_spent = st.number_input(
-                "Hours Spent", min_value=0.5, max_value=24.0,
-                value=8.0, step=0.5, format="%.1f"
+                "Hours Spent",
+                min_value=0.5,
+                max_value=24.0,
+                value=8.0,
+                step=0.5,
+                format="%.1f",
             )
         with col2:
             import datetime
+
             entry_date = st.date_input("Date", value=datetime.date.today())
 
-        notes = st.text_area("Notes (optional)", max_chars=500,
-                             placeholder="Brief description of work done")
+        notes = st.text_area(
+            "Notes (optional)",
+            max_chars=500,
+            placeholder="Brief description of work done",
+        )
         submitted = st.form_submit_button("Log Time")
 
     if submitted:
-        valid, errors = validate_timesheet_form(project_name, hours_spent, entry_date, notes)
+        valid, errors = validate_timesheet_form(
+            project_name, hours_spent, entry_date, notes
+        )
         if not valid:
             for err in errors:
                 st.error(err)
@@ -179,7 +193,7 @@ def show_main_app() -> None:
                 project_name=project_name.strip(),
                 hours_spent=hours_spent,
                 date=entry_date.isoformat(),
-                notes=notes.strip()
+                notes=notes.strip(),
             )
             st.success(f"Logged {hours_spent}h to '{project_name}' on {entry_date}.")
             st.rerun()
@@ -195,12 +209,19 @@ def show_main_app() -> None:
         col1, col2 = st.columns(2)
         with col1:
             upd_hours = st.number_input(
-                "Hours Spent", min_value=0.5, max_value=24.0,
-                value=8.0, step=0.5, format="%.1f"
+                "Hours Spent",
+                min_value=0.5,
+                max_value=24.0,
+                value=8.0,
+                step=0.5,
+                format="%.1f",
             )
         with col2:
             import datetime
-            upd_date = st.date_input("Date", key="upd_date", value=datetime.date.today())
+
+            upd_date = st.date_input(
+                "Date", key="upd_date", value=datetime.date.today()
+            )
         upd_notes = st.text_area("Notes (optional)", max_chars=500)
         update_submitted = st.form_submit_button("Update Entry")
 
@@ -212,7 +233,9 @@ def show_main_app() -> None:
             # Prevent users editing other users' entries (OWASP A01 - Broken Access Control)
             st.error("You do not have permission to edit this entry.")
         else:
-            valid, errors = validate_timesheet_form(upd_project, upd_hours, upd_date, upd_notes)
+            valid, errors = validate_timesheet_form(
+                upd_project, upd_hours, upd_date, upd_notes
+            )
             if not valid:
                 for err in errors:
                     st.error(err)
@@ -222,7 +245,7 @@ def show_main_app() -> None:
                     upd_project.strip(),
                     upd_hours,
                     upd_date.isoformat(),
-                    upd_notes.strip()
+                    upd_notes.strip(),
                 )
                 st.success("Entry updated successfully.")
                 st.rerun()
@@ -232,8 +255,9 @@ def show_main_app() -> None:
     # Delete timesheet entry (with confirmation)
     st.header("Delete an Entry")
 
-    ts_id_to_delete = st.number_input("Timesheet ID to Delete", min_value=1, step=1,
-                                      key="del_ts_id")
+    ts_id_to_delete = st.number_input(
+        "Timesheet ID to Delete", min_value=1, step=1, key="del_ts_id"
+    )
     confirm_delete = st.checkbox("I confirm I want to delete this entry")
 
     if st.button("Delete Entry", disabled=not confirm_delete):
@@ -249,6 +273,7 @@ def show_main_app() -> None:
 
 
 # Admin page — user management
+
 
 def show_admin_app() -> None:
     """
@@ -274,10 +299,10 @@ def show_admin_app() -> None:
     if users:
         user_data = [
             {
-                "ID":        u["id"],
-                "Username":  u["username"],
-                "Admin":     "Yes" if u["is_admin"] else "No",
-                "Created":   u["created_at"],
+                "ID": u["id"],
+                "Username": u["username"],
+                "Admin": "Yes" if u["is_admin"] else "No",
+                "Created": u["created_at"],
             }
             for u in users
         ]
@@ -293,8 +318,7 @@ def show_admin_app() -> None:
     with st.form("create_user_form", clear_on_submit=True):
         new_username = st.text_input("Username", max_chars=50)
         new_password = st.text_input(
-            "Password", type="password", max_chars=128,
-            help=auth.PASSWORD_POLICY
+            "Password", type="password", max_chars=128, help=auth.PASSWORD_POLICY
         )
         new_is_admin = st.checkbox("Grant admin privileges")
         create_submitted = st.form_submit_button("Create User")
@@ -309,7 +333,9 @@ def show_admin_app() -> None:
             if existing:
                 st.error("A user with that username already exists.")
             else:
-                uid = _db.create_user(new_username.strip(), new_password, is_admin=new_is_admin)
+                uid = _db.create_user(
+                    new_username.strip(), new_password, is_admin=new_is_admin
+                )
                 st.success(f"User '{new_username}' created (ID: {uid}).")
                 st.rerun()
 
@@ -319,12 +345,13 @@ def show_admin_app() -> None:
     st.header("Update User")
 
     with st.form("update_user_form"):
-        upd_user_id  = st.number_input("User ID to Update", min_value=1, step=1)
+        upd_user_id = st.number_input("User ID to Update", min_value=1, step=1)
         upd_username = st.text_input("New Username", max_chars=50)
         upd_password = st.text_input(
             "New Password (leave blank to keep current)",
-            type="password", max_chars=128,
-            help=auth.PASSWORD_POLICY
+            type="password",
+            max_chars=128,
+            help=auth.PASSWORD_POLICY,
         )
         update_user_submitted = st.form_submit_button("Update User")
 
@@ -347,7 +374,9 @@ def show_admin_app() -> None:
 
     # Unlock locked account
     st.header("Unlock Account")
-    st.caption("Use this to manually unlock an account locked due to failed login attempts.")
+    st.caption(
+        "Use this to manually unlock an account locked due to failed login attempts."
+    )
 
     with st.form("unlock_form"):
         unlock_user_id = st.number_input("User ID to Unlock", min_value=1, step=1)
@@ -366,7 +395,9 @@ def show_admin_app() -> None:
     # Delete (soft) user
     st.header("Delete User")
 
-    del_user_id = st.number_input("User ID to Delete", min_value=1, step=1, key="del_uid")
+    del_user_id = st.number_input(
+        "User ID to Delete", min_value=1, step=1, key="del_uid"
+    )
     confirm_del_user = st.checkbox("I confirm I want to delete this user")
 
     if st.button("Delete User", disabled=not confirm_del_user):
