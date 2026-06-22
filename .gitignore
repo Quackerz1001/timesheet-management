@@ -1,4 +1,4 @@
-# Environment variables - never commit secrets
+# Environment variables
 .env
  
 # Database files
