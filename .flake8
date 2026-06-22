@@ -1,0 +1,19 @@
+[flake8]
+# Maximum line length
+max-line-length = 100
+
+# Folders to ignore
+exclude =
+    .git,
+    __pycache__,
+    .pytest_cache,
+    venv,
+    .venv,
+    db
+
+# Error codes to ignore:
+extend-ignore = W503
+
+# Show counts of each error type at the end of the report
+statistics = True
+count = True

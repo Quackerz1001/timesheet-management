@@ -1,0 +1,26 @@
+# Environment variables - never commit secrets
+.env
+ 
+# Database files
+*.db
+db/
+ 
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.coverage
+htmlcov/
+ 
+# Streamlit
+.streamlit/secrets.toml
+ 
+# OS
+.DS_Store
+Thumbs.db
+ 
+# IDEs
+.vscode/
+.idea/
+ 
