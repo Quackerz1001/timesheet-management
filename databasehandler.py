@@ -213,8 +213,8 @@ class DatabaseHandler:
         with self._create_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(
-                "SELECT id, username, is_admin, created_at"
-                "FROM users WHERE is_deleted = 0"
+                "SELECT id, username, is_admin, created_at "
+                "FROM users WHERE is_deleted = 0 "
                 "ORDER BY username"
             )
             return cursor.fetchall()
@@ -229,7 +229,7 @@ class DatabaseHandler:
                     new_password.encode("utf-8"), bcrypt.gensalt(rounds=12)
                 ).decode("utf-8")
                 cursor.execute(
-                    "UPDATE users SET username = ?, password_hash = ?"
+                    "UPDATE users SET username = ?, password_hash = ? "
                     "WHERE id = ? AND is_deleted = 0",
                     (username, password_hash, user_id),
                 )
